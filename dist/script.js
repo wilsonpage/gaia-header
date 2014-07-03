@@ -423,6 +423,9 @@ proto.createdCallback = function() {
     'click', proto._onActionButtonClick.bind(this)
   );
 
+  this.localize();
+  window.addEventListener('gaiaheader:set', this.localize.bind(this));
+
   shadow.appendChild(this._template);
   componentUtils.style.call(this, stylesheets);
 
@@ -455,6 +458,12 @@ proto.triggerAction = function() {
   }
 };
 
+proto.localize = function() {
+  var action = this.getAttribute('action');
+  var title = data[action];
+  this._actionButton.setAttribute('title', title);
+};
+
 /**
  * Configure the action button based
  * on the value of the `data-action`
@@ -478,8 +487,6 @@ proto._configureActionButton = function() {
   this._actionButton.setAttribute('icon', type);
   this._actionButton.classList.remove('icon-' + old);
   this._actionButton.classList.add('icon-' + type);
-
-  console.log(old, type);
 };
 
 /**
@@ -525,7 +532,17 @@ template.innerHTML = '<header>' +
   '</header>';
 
 // Register and return the constructor
-module.exports = document.registerElement('gaia-header', { prototype: proto });
+var GaiaHeader = module.exports = document.registerElement('gaia-header', { prototype: proto });
+var data = {
+  back: 'back',
+  menu: 'menu',
+  close: 'close'
+};
+
+GaiaHeader.set = function() {
+  data = data;
+  window.dispatchEvent(new CustomEvent('gaiaheader:set'));
+};
 
 });})((function(n,w){'use strict';return typeof define=='function'&&define.amd?
 define:typeof module=='object'?function(c){c(_dereq_,exports,module);}:

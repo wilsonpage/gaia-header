@@ -53,6 +53,9 @@ proto.createdCallback = function() {
     'click', proto._onActionButtonClick.bind(this)
   );
 
+  this.injectStrings();
+  window.addEventListener('gaiaheader:stringschanged', this.injectStrings.bind(this));
+
   shadow.appendChild(this._template);
   componentUtils.style.call(this, stylesheets);
 
@@ -85,6 +88,12 @@ proto.triggerAction = function() {
   }
 };
 
+proto.injectStrings = function() {
+  var action = this.getAttribute('action');
+  var title = data[action];
+  this._actionButton.setAttribute('title', title);
+};
+
 /**
  * Configure the action button based
  * on the value of the `data-action`
@@ -108,8 +117,6 @@ proto._configureActionButton = function() {
   this._actionButton.setAttribute('icon', type);
   this._actionButton.classList.remove('icon-' + old);
   this._actionButton.classList.add('icon-' + type);
-
-  console.log(old, type);
 };
 
 /**
@@ -154,8 +161,29 @@ template.innerHTML = '<header>' +
     '<content id="buttons-content" select="button,a"></content>' +
   '</header>';
 
-// Register and return the constructor
-module.exports = document.registerElement('gaia-header', { prototype: proto });
+// Register the element
+var GaiaHeader = document.registerElement('gaia-header', { prototype: proto });
+
+// Default strings
+var strings = {
+  back: 'back',
+  menu: 'menu',
+  close: 'close'
+};
+
+/**
+ * Update the strings object.
+ *
+ * @public
+ */
+GaiaHeader.strings = function() {
+  var event = new CustomEvent('gaiaheader:stringschanged');
+  string = strings;
+  window.dispatchEvent(event);
+};
+
+// Expose the constructor
+module.exports = GaiaHeader;
 
 });})((function(n,w){'use strict';return typeof define=='function'&&define.amd?
 define:typeof module=='object'?function(c){c(require,exports,module);}:

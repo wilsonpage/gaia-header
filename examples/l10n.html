@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Header Demo</title>
+  <meta name="description" content="Demo app for Custom Element based headers">
+  <style type="text/css">
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-size: 17px;
+      background-color: #efefef;
+    }
+    body {
+      background: none;
+    }
+    gaia-header {
+      margin-bottom: 15px;
+    }
+    #message {
+      font-size: 2rem;
+      margin: 1.5rem 3rem;
+    }
+  </style>
+  <script>
+    window.GaiaHeaderBaseUrl = '../';
+    window.packagesBaseUrl = '../bower_components/';
+  </script>
+  <script src="../dist/script.js"></script>
+</head>
+
+<body>
+  <gaia-header id="header3" action="back">
+    <h1 id="title3">Mark Alfenito</h1>
+    <button id="edit3" icon="edit"></button>
+  </gaia-header>
+
+  <button id="button">Localize</button>
+<script>
+
+  // Fake l10n
+  var l10n = {
+    back: 'back',
+    menu: 'menu',
+    close: 'close',
+    get: function(key) {
+      return this[key];
+    }
+  };
+
+  // Update GaiaHeader strings whenever app is 'localized'
+  window.addEventListener('localized', function() {
+    GaiaHeader.set({
+      back: l10n.get('back'),
+      menu: l10n.get('menu'),
+      close: l10n.get('close')
+    });
+  });
+
+  // Trigger 'localized' event when button clicked
+  button.addEventListener('click', function() {
+    window.dispatchEvent(new CustomEvent('localized'));
+  });
+</script>
+</body>
+</html>
