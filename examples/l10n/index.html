@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Header Demo</title>
+  <link rel="resource" type="application/l10n" href="locales/locales.ini">
+  <meta name="description" content="Demo app for Custom Element based headers">
+  <style type="text/css">
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-size: 17px;
+      background-color: #efefef;
+    }
+    body {
+      background: none;
+    }
+    gaia-header {
+      margin-bottom: 15px;
+    }
+    #message {
+      font-size: 2rem;
+      margin: 1.5rem 3rem;
+    }
+  </style>
+  <script>
+    window.GaiaHeaderBaseUrl = '../../';
+    window.packagesBaseUrl = '../../bower_components/';
+  </script>
+  <script src="l10n.js"></script>
+  <script src="../../dist/script.js"></script>
+</head>
+
+<body>
+  <gaia-header id="header3" action="back" data-l10n-id="gaia-header">
+    <h1 id="title3">Mark Alfenito</h1>
+    <button id="edit3" icon="edit"></button>
+  </gaia-header>
+<script>
+</script>
+</body>
+</html>

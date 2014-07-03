@@ -415,6 +415,7 @@ var stylesheets = [
 proto.createdCallback = function() {
   var shadow = this.createShadowRoot();
 
+  this.l10n = {};
   this._template = template.content.cloneNode(true);
   this._actionButton = this._template.getElementById('header-nav');
   this._headings = this.querySelectorAll('h1,h2,h3,h4');
@@ -443,6 +444,14 @@ proto.attributeChangedCallback = function(attr, oldVal, newVal) {
   if (attr === 'action') {
     this._configureActionButton();
     GaiaHeaderFontFit.reformatHeading(this._heading);
+    return;
+  }
+
+
+  if (~attr.indexOf('l10n-')) {
+    var key = attr.substring(5);
+    this.l10n[key] = newVal;
+    this._configureActionButton();
   }
 };
 
@@ -465,6 +474,7 @@ proto.triggerAction = function() {
 proto._configureActionButton = function() {
   var old = this._actionButton.getAttribute('icon');
   var type = this.getAttribute('action');
+  var title = this.l10n[type];
 
   // TODO: Action button should be
   // hidden by default then shown
@@ -479,7 +489,10 @@ proto._configureActionButton = function() {
   this._actionButton.classList.remove('icon-' + old);
   this._actionButton.classList.add('icon-' + type);
 
-  console.log(old, type);
+  if (title) {
+    this._actionButton.setAttribute('title', title);
+    console.log('title', title);
+  }
 };
 
 /**
