@@ -99,6 +99,10 @@
       var num = i + 1;
       message.textContent = 'header (' + num + ') action (' + e.detail.type + ')';
     });
+
+    el.addEventListener('mousemove', function(e) {
+      console.log(e);
+    });
   });
 
   breakit.addEventListener('click', function(e) {

@@ -1,5 +1,5 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.GaiaHeader=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-(function(define){'use strict';define(function(_dereq_,exports,module){
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.GaiaHeader=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(define){'use strict';define(function(require,exports,module){
 
 /**
  * Exports
@@ -26,12 +26,12 @@ function isLoaded() {
 }
 
 });})((function(n,w){'use strict';return typeof define=='function'&&define.amd?
-define:typeof module=='object'?function(c){c(_dereq_,exports,module);}:
+define:typeof module=='object'?function(c){c(require,exports,module);}:
 function(c){var m={exports:{}},r=function(n){return w[n];};
 w[n]=c(r,m.exports,m)||m.exports;};})('gaia-icons',this));
 
-},{}],2:[function(_dereq_,module,exports){
-(function(define){'use strict';define(function(_dereq_,exports,module){
+},{}],2:[function(require,module,exports){
+(function(define){'use strict';define(function(require,exports,module){
 /*globals define,exports,module,require*/
 
   /**
@@ -365,20 +365,20 @@ w[n]=c(r,m.exports,m)||m.exports;};})('gaia-icons',this));
   module.exports = GaiaHeaderFontFit;
 
 });})((function(n,w){'use strict';return typeof define=='function'&&define.amd?
-define:typeof module=='object'?function(c){c(_dereq_,exports,module);}:
+define:typeof module=='object'?function(c){c(require,exports,module);}:
 function(c){var m={exports:{}},r=function(n){return w[n];};
 w[n]=c(r,m.exports,m)||m.exports;};})('./lib/font-fit',this));
 
-},{}],3:[function(_dereq_,module,exports){
-(function(define){'use strict';define(function(_dereq_,exports,module){
+},{}],3:[function(require,module,exports){
+(function(define){'use strict';define(function(require,exports,module){
 /*globals define*//*jshint node:true*/
 
 /**
  * Dependencies
  */
 
-var loadGaiaIcons = _dereq_('gaia-icons');
-var fontFit = _dereq_('./lib/font-fit');
+var loadGaiaIcons = require('gaia-icons');
+var fontFit = require('./lib/font-fit');
 
 /**
  * Locals
@@ -427,8 +427,12 @@ proto.createdCallback = function() {
 
   // Action button
   this.configureActionButton();
+
+  // Bind events
   this.els.actionButton.addEventListener('click',
     proto.onActionButtonClick.bind(this));
+  this.els.actionButton.addEventListener('mousemove',
+    proto.onActionButtonMouseMove.bind(this));
 
   shadow.appendChild(tmpl);
   this.styleHack();
@@ -545,6 +549,40 @@ proto.onActionButtonClick = function(e) {
   setTimeout(this.dispatchEvent.bind(this, actionEvent));
 };
 
+/**
+ * While we wait for bug 887541 to land, we
+ * manually propagate 'mousemove' events from
+ * the action button so that the screen-reader
+ * can detect the tapping of shadow-dom nodes.
+ *
+ * @param  {Event} e
+ */
+proto.onActionButtonMouseMove = function(e) {
+  var event = document.createEvent('MouseEvents');
+
+  event.initMouseEvent(
+    'mousemove', //event type : click, mousedown, mouseup, mouseover, mousemove, mouseout.
+    true, //canBubble
+    false, //cancelable
+    window, //event's AbstractView : should be window
+    1, // detail : Event's mouse click count
+    e.screenX, // screenX
+    e.screenY, // screenY
+    e.clientX, // clientX
+    e.clientY, // clientY
+    false, // ctrlKey
+    false, // altKey
+    false, // shiftKey
+    false, // metaKey
+    0, // button : 0 = click, 1 = middle button, 2 = right button
+    null // relatedTarget : Only used with some event types (e.g. mouseover and mouseout). In other cases, pass null.
+  );
+
+  console.log('mousemove', e);
+
+  this.dispatchEvent(event);
+};
+
 // HACK: Create a <template> in memory at runtime.
 // When the custom-element is created we clone
 // this template and inject into the shadow-root.
@@ -571,10 +609,9 @@ module.exports = document.registerElement('gaia-header', { prototype: proto });
 module.exports._prototype = proto;
 
 });})((function(n,w){'use strict';return typeof define=='function'&&define.amd?
-define:typeof module=='object'?function(c){c(_dereq_,exports,module);}:
+define:typeof module=='object'?function(c){c(require,exports,module);}:
 function(c){var m={exports:{}},r=function(n){return w[n];};
 w[n]=c(r,m.exports,m)||m.exports;};})('gaia-header',this));
 
-},{"./lib/font-fit":2,"gaia-icons":1}]},{},[3])
-(3)
+},{"./lib/font-fit":2,"gaia-icons":1}]},{},[3])(3)
 });

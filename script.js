@@ -55,8 +55,12 @@ proto.createdCallback = function() {
 
   // Action button
   this.configureActionButton();
+
+  // Bind events
   this.els.actionButton.addEventListener('click',
     proto.onActionButtonClick.bind(this));
+  this.els.actionButton.addEventListener('mousemove',
+    proto.onActionButtonMouseMove.bind(this));
 
   shadow.appendChild(tmpl);
   this.styleHack();
@@ -171,6 +175,40 @@ proto.onActionButtonClick = function(e) {
   var config = { detail: { type: this.getAttribute('action') } };
   var actionEvent = new CustomEvent('action', config);
   setTimeout(this.dispatchEvent.bind(this, actionEvent));
+};
+
+/**
+ * While we wait for bug 887541 to land, we
+ * manually propagate 'mousemove' events from
+ * the action button so that the screen-reader
+ * can detect the tapping of shadow-dom nodes.
+ *
+ * @param  {Event} e
+ */
+proto.onActionButtonMouseMove = function(e) {
+  var event = document.createEvent('MouseEvents');
+
+  event.initMouseEvent(
+    'mousemove', //event type : click, mousedown, mouseup, mouseover, mousemove, mouseout.
+    true, //canBubble
+    false, //cancelable
+    window, //event's AbstractView : should be window
+    1, // detail : Event's mouse click count
+    e.screenX, // screenX
+    e.screenY, // screenY
+    e.clientX, // clientX
+    e.clientY, // clientY
+    false, // ctrlKey
+    false, // altKey
+    false, // shiftKey
+    false, // metaKey
+    0, // button : 0 = click, 1 = middle button, 2 = right button
+    null // relatedTarget : Only used with some event types (e.g. mouseover and mouseout). In other cases, pass null.
+  );
+
+  console.log('mousemove', e);
+
+  this.dispatchEvent(event);
 };
 
 // HACK: Create a <template> in memory at runtime.
