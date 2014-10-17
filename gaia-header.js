@@ -58,6 +58,7 @@ proto.createdCallback = function() {
     inner: this.shadowRoot.querySelector('.inner')
   };
 
+  this.runFontFit = this.runFontFit.bind(this);
   this.onActionButtonClick = this.onActionButtonClick.bind(this);
   this.els.actionButton.addEventListener('click', this.onActionButtonClick);
   this.setupInteractionListeners();
@@ -205,9 +206,14 @@ proto.restyleShadowDom = function() {
  * @private
  */
 proto.runFontFit = function() {
-  for (var i = 0; i < this.els.headings.length; i++) {
-    fontFit.reformatHeading(this.els.headings[i]);
-    fontFit.observeHeadingChanges(this.els.headings[i]);
+  if (document.readyState !== 'complete') {
+    addEventListener('load', this.runFontFit);
+    return;
+  }
+
+  for (var i = 0; i < self.els.headings.length; i++) {
+    fontFit.reformatHeading(self.els.headings[i]);
+    fontFit.observeHeadingChanges(self.els.headings[i]);
   }
 };
 

@@ -43,34 +43,28 @@ return w[n];},m.exports,m);w[n]=m.exports;};})('gaia-icons',this));
  * @type {Object}
  */
 var pointer = [
-  { down: 'touchstart', up: 'touchend', move: 'touchmove' },
-  { down: 'mousedown', up: 'mouseup', move: 'mousemove' }
+  { down: 'touchstart', up: 'touchend' },
+  { down: 'mousedown', up: 'mouseup' }
 ]['ontouchstart' in window ? 0 : 1];
 
-module.exports = function(el, options) {
+exports = module.exports = function(el, options) {
   var released = (options && options.released) || 200;
   var min = (options && options.min) || 300;
-  var instant = options && options.instant;
   var timeouts = {};
   var removeReleased;
 
   el.addEventListener(pointer.down, function(e) {
-    // if (scrolling) { return; }
     var start = e.timeStamp;
     var target = e.target;
-    var pressed = false;
-    var last = e;
 
     // If there is a removeRelease pending
     // run it before we add any more 'pressed'
     if (removeReleased) { removeReleased(); }
 
-    if (instant) { onPressed(); }
-    else { notScrolling(e, onPressed); }
-
-    function onPressed() {
-      classListUp(target, 'add', 'pressed');
-    }
+    // Add the 'pressed' class up the tree
+    // and clear and pending timeouts.
+    classListUp(target, 'add', 'pressed');
+    clearTimeout(timeouts.pressed);
 
     addEventListener(pointer.up, function fn(e) {
       removeEventListener(pointer.up, fn, true);
@@ -98,59 +92,6 @@ module.exports = function(el, options) {
   }, true);
 };
 
-function notScrolling(e, fn) {
-  detectScrolling(e, function(scrolling) {
-    if (!scrolling) { fn(); }
-  });
-}
-
-function detectScrolling(e, fn) {
-  var period = 76;
-  var last = e;
-
-  if (windowScrolling) { return fn(true); }
-  if (!e.touches) { return fn(false); }
-
-  addEventListener('touchmove', onTouchMove, true);
-  setTimeout(detect, period);
-
-  function detect() {
-    removeEventListener('touchmove', onTouchMove, true);
-    if (windowScrolling) { return fn(true); }
-    var time = last.timeStamp - e.timeStamp;
-    var distance = getDistance(e.touches[0], last.touches[0]);
-    var speed = distance / time;
-    var scrolling = speed > 0.03;
-    fn(scrolling);
-  }
-
-  function onTouchMove(e) { last = e; }
-
-  function getDistance(a, b) {
-    var xs = 0;
-    var ys = 0;
-
-    xs = b.clientX - a.clientX;
-    xs = xs * xs;
-
-    ys = b.clientY - a.clientY;
-    ys = ys * ys;
-
-    return Math.sqrt(xs + ys);
-  }
-}
-
-var windowScrolling = false;
-var scrollTimeout;
-
-addEventListener('scroll', function() {
-  windowScrolling = true;
-  clearTimeout(scrollTimeout);
-  scrollTimeout = setTimeout(function() {
-    windowScrolling = false;
-  }, 60);
-});
-
 /**
  * Run a classList method on every
  * element up the DOM tree.
@@ -170,7 +111,6 @@ function classListUp(el, method, cls) {
 :(function(n,w){'use strict';return typeof module=='object'?function(c){
 c(require,exports,module);}:function(c){var m={exports:{}};c(function(n){
 return w[n];},m.exports,m);w[n]=m.exports;};})('pressed',this));
-
 },{}],3:[function(require,module,exports){
 ;(function(define){'use strict';define(function(require,exports,module){
 /*jshint esnext:true*/
@@ -211,7 +151,7 @@ var proto = Object.create(HTMLElement.prototype);
 var actionTypes = {
   menu: true,
   back: true,
-  close: true,
+  close: true
 };
 
 /**
@@ -232,37 +172,97 @@ proto.createdCallback = function() {
     inner: this.shadowRoot.querySelector('.inner')
   };
 
-  this.els.actionButton.addEventListener('click',
-    proto.onActionButtonClick.bind(this));
-
-  this.configureActionButton();
+  this.runFontFit = this.runFontFit.bind(this);
+  this.onActionButtonClick = this.onActionButtonClick.bind(this);
+  this.els.actionButton.addEventListener('click', this.onActionButtonClick);
   this.setupInteractionListeners();
+  this.configureActionButton();
   this.shadowStyleHack();
   this.runFontFit();
-  this.setupRTL();
+  this.setupRtl();
+};
+
+/**
+ * Called when the element is
+ * attached to the DOM.
+ *
+ * @private
+ */
+proto.attachedCallback = function() {
+  this.restyleShadowDom();
+  this.rerunFontFit();
+  this.setupRtl();
+};
+
+/**
+ * Called when the element is detached
+ * (removed) from the DOM.
+ *
+ * @private
+ */
+proto.detachedCallback = function() {
+  this.teardownRtl();
 };
 
 /**
  * Sets up mutation observes to listen for
  * 'dir' attribute changes on <html> and
- * runs the intial configuration.
+ * runs the initial configuration.
+ *
+ * Although the `dir` attribute should
+ * be able to be placed on any ancestor
+ * node, we are currently only supporting
+ * <html>. This is to keep the logic
+ * simple and compatible with mozL10n.js.
+ *
+ * We could walk up the DOM and attach
+ * a mutation observer to the nearest
+ * ancestor with a `dir` attribute,
+ * but then things start to get messy
+ * and complex for little gain.
+ *
+ * We re-run font-fit to make sure
+ * the heading is re-positioned after
+ * the buttons switch around. We could
+ * potentially let the font-fit observer
+ * catch the `textContent` change that
+ * *may* happen after a language change,
+ * but that's only if the heading has
+ * been localized.
+ *
+ * Once `:host-context()` selector lands
+ * (bug 1082060) we may be able to reconsider
+ * this implementation. But even then, we would
+ * need a way to re-run font-fit.
  *
  * @private
  */
-proto.setupRTL = function() {
-  var observer = new MutationObserver(onAttributeChanged);
-  var self = this;
+proto.setupRtl = function() {
+  if (this.observerRtl) { return; }
 
-  observer.observe(document.documentElement, { attributes: true });
-  this.configureRTL();
+  var self = this;
+  this.observerRtl = new MutationObserver(onAttributeChanged);
+  this.observerRtl.observe(document.documentElement, { attributes: true });
+  this.configureRtl();
 
   function onAttributeChanged(mutations) {
     mutations.forEach(function(mutation) {
       if (mutation.attributeName !== 'dir') { return; }
-      self.configureRTL();
-      self.rerunFontFit();
-    });
+      this.configureRtl();
+      this.rerunFontFit();
+    }, self);
   }
+};
+
+/**
+ * Stop the mutation observer.
+ *
+ * @private
+ */
+proto.teardownRtl = function() {
+  if (!this.observerRtl) { return; }
+  this.observerRtl.disconnect();
+  this.observerRtl = null;
 };
 
 /**
@@ -271,7 +271,7 @@ proto.setupRTL = function() {
  *
  * @private
  */
-proto.configureRTL = function() {
+proto.configureRtl = function() {
   var value = document.documentElement.getAttribute('dir') || 'ltr';
   if (value) this.els.inner.setAttribute('dir', value);
 };
@@ -298,11 +298,6 @@ proto.shadowStyleHack = function() {
   this.appendChild(style);
 };
 
-proto.attachedCallback = function() {
-  this.restyleShadowDom();
-  this.rerunFontFit();
-};
-
 /**
  * Workaround for bug 1056783.
  *
@@ -319,6 +314,48 @@ proto.restyleShadowDom = function() {
 };
 
 /**
+ * Runs the logic to size and position
+ * header text inside the available space.
+ *
+ * @private
+ */
+proto.runFontFit = function() {
+  if (document.readyState !== 'complete') {
+    // console.log('not ready')
+    addEventListener('load', this.runFontFit);
+    return;
+  }
+
+  // console.log('run');
+
+  var self = this;
+
+
+    // requestAnimationFrame(function() {
+    // requestAnimationFrame(function() {
+    // requestAnimationFrame(function() {
+    // requestAnimationFrame(function() {
+    // requestAnimationFrame(function() {
+    // requestAnimationFrame(function() {
+  for (var i = 0; i < self.els.headings.length; i++) {
+    // console.log(self.els.headings[i].clientWidth);
+
+    // console.log(getComputedStyle(self.els.headings[i]).width);
+
+
+      fontFit.reformatHeading(self.els.headings[i]);
+    // fontFit.observeHeadingChanges(self.els.headings[i]);
+  }
+    // });
+    // });
+    // });
+    // });
+    // });
+    // });
+
+};
+
+/**
  * Rerun font-fit logic.
  *
  * TODO: We really need an official API for this.
@@ -328,13 +365,6 @@ proto.restyleShadowDom = function() {
 proto.rerunFontFit = function() {
   for (var i = 0; i < this.els.headings.length; i++) {
     this.els.headings[i].textContent = this.els.headings[i].textContent;
-  }
-};
-
-proto.runFontFit = function() {
-  for (var i = 0; i < this.els.headings.length; i++) {
-    fontFit.reformatHeading(this.els.headings[i]);
-    fontFit.observeHeadingChanges(this.els.headings[i]);
   }
 };
 
@@ -715,6 +745,9 @@ button.released,
 
 /**
  * [dir='rtl']
+ *
+ * Switch to use the 'forward' icon
+ * when in right-to-left direction.
  */
 
 [dir='rtl'] .icon-back:before {
@@ -802,7 +835,11 @@ return w[n];},m.exports,m);w[n]=m.exports;};})('gaia-header',this));
 
       // Perform auto-resize and center.
       style.textWidth = this._autoResizeElement(heading, style);
-      this._centerTextToScreen(heading, style);
+
+
+      requestAnimationFrame(function() {
+        this._centerTextToScreen(heading, style);
+      }.bind(this));
     },
 
     /**
@@ -1043,8 +1080,8 @@ return w[n];},m.exports,m);w[n]=m.exports;};})('gaia-header',this));
 
       // If there is no space to the left or right of the title
       // we apply padding so that it's not flush up against edge
-      heading.classList.toggle('flush-left', tightText && !sideSpaceLeft);
-      heading.classList.toggle('flush-right', tightText && !sideSpaceRight);
+      // heading.classList.toggle('flush-left', tightText && !sideSpaceLeft);
+      // heading.classList.toggle('flush-right', tightText && !sideSpaceRight);
 
       // If both margins have the same width, the header is already centered.
       if (sideSpaceLeft === sideSpaceRight) {
