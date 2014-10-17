@@ -206,14 +206,20 @@ proto.restyleShadowDom = function() {
  * @private
  */
 proto.runFontFit = function() {
+  var self = this;
+
   if (document.readyState !== 'complete') {
     addEventListener('load', this.runFontFit);
     return;
   }
 
-  for (var i = 0; i < self.els.headings.length; i++) {
-    fontFit.reformatHeading(self.els.headings[i]);
-    fontFit.observeHeadingChanges(self.els.headings[i]);
+  for (var i = 0; i < this.els.headings.length; i++) {
+    fontFit.reformatHeading(this.els.headings[i], complete);
+    fontFit.observeHeadingChanges(this.els.headings[i]);
+  }
+
+  function complete() {
+    self.classList.add('font-fit-done');
   }
 };
 
@@ -457,6 +463,7 @@ gaia-header[hidden] {
   font-weight: 300;
   font-style: italic;
   font-size: 24px;
+  visibility: hidden;
 
   color:
     var(--header-title-color,
@@ -464,6 +471,10 @@ gaia-header[hidden] {
     var(--title-color,
     var(--text-color,
     inherit))));
+}
+
+.font-fit-done h1 {
+  visibility: visible;
 }
 
 /**

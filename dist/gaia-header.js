@@ -320,39 +320,21 @@ proto.restyleShadowDom = function() {
  * @private
  */
 proto.runFontFit = function() {
+  var self = this;
+
   if (document.readyState !== 'complete') {
-    // console.log('not ready')
     addEventListener('load', this.runFontFit);
     return;
   }
 
-  // console.log('run');
-
-  var self = this;
-
-
-    // requestAnimationFrame(function() {
-    // requestAnimationFrame(function() {
-    // requestAnimationFrame(function() {
-    // requestAnimationFrame(function() {
-    // requestAnimationFrame(function() {
-    // requestAnimationFrame(function() {
-  for (var i = 0; i < self.els.headings.length; i++) {
-    // console.log(self.els.headings[i].clientWidth);
-
-    // console.log(getComputedStyle(self.els.headings[i]).width);
-
-
-      fontFit.reformatHeading(self.els.headings[i]);
-    // fontFit.observeHeadingChanges(self.els.headings[i]);
+  for (var i = 0; i < this.els.headings.length; i++) {
+    fontFit.reformatHeading(this.els.headings[i], complete);
+    fontFit.observeHeadingChanges(this.els.headings[i]);
   }
-    // });
-    // });
-    // });
-    // });
-    // });
-    // });
 
+  function complete() {
+    self.classList.add('font-fit-done');
+  }
 };
 
 /**
@@ -595,6 +577,7 @@ gaia-header[hidden] {
   font-weight: 300;
   font-style: italic;
   font-size: 24px;
+  visibility: hidden;
 
   color:
     var(--header-title-color,
@@ -602,6 +585,10 @@ gaia-header[hidden] {
     var(--title-color,
     var(--text-color,
     inherit))));
+}
+
+.font-fit-done h1 {
+  visibility: visible;
 }
 
 /**
@@ -813,7 +800,7 @@ return w[n];},m.exports,m);w[n]=m.exports;};})('gaia-header',this));
      *
      * @param {HTMLHeadingElement} heading h1 text inside header to reformat.
      */
-    reformatHeading: function(heading) {
+    reformatHeading: function(heading, done) {
       // Skip resize logic if header has no content, ie before localization.
       if (!heading || heading.textContent.trim() === '') {
         return;
@@ -837,9 +824,10 @@ return w[n];},m.exports,m);w[n]=m.exports;};})('gaia-header',this));
       style.textWidth = this._autoResizeElement(heading, style);
 
 
-      requestAnimationFrame(function() {
+      // requestAnimationFrame(function() {
         this._centerTextToScreen(heading, style);
-      }.bind(this));
+        if (done) { done(); }
+      // }.bind(this));
     },
 
     /**
@@ -1080,8 +1068,8 @@ return w[n];},m.exports,m);w[n]=m.exports;};})('gaia-header',this));
 
       // If there is no space to the left or right of the title
       // we apply padding so that it's not flush up against edge
-      // heading.classList.toggle('flush-left', tightText && !sideSpaceLeft);
-      // heading.classList.toggle('flush-right', tightText && !sideSpaceRight);
+      heading.classList.toggle('flush-left', tightText && !sideSpaceLeft);
+      heading.classList.toggle('flush-right', tightText && !sideSpaceRight);
 
       // If both margins have the same width, the header is already centered.
       if (sideSpaceLeft === sideSpaceRight) {
