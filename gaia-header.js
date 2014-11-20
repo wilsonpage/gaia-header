@@ -127,7 +127,7 @@ proto.rerunFontFit = function() {
 proto.attributeChangedCallback = function(attr, oldVal, newVal) {
   if (attr === 'action') {
     this.configureActionButton();
-    fontFit.reformatHeading(this._heading);
+    this.rerunFontFit();
   }
 };
 

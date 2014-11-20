@@ -203,7 +203,7 @@ var hasShadowCSS = (function() {
  *
  * @type {Object}
  */
-var proto = Object.create(HTMLDivElement.prototype);
+var proto = Object.create(HTMLElement.prototype);
 
 /**
  * Supported action types
@@ -303,7 +303,7 @@ proto.rerunFontFit = function() {
 proto.attributeChangedCallback = function(attr, oldVal, newVal) {
   if (attr === 'action') {
     this.configureActionButton();
-    fontFit.reformatHeading(this._heading);
+    this.rerunFontFit();
   }
 };
 
