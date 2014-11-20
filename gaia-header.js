@@ -5,6 +5,7 @@
  * Dependencies
  */
 
+var Component = require('gaia-component');
 var fontFit = require('./lib/font-fit');
 var pressed = require('pressed');
 
@@ -12,33 +13,18 @@ var pressed = require('pressed');
 require('gaia-icons');
 
 /**
- * Detects presence of shadow-dom
- * CSS selectors.
- *
- * @return {Boolean}
- */
-var hasShadowCSS = (function() {
-  try { document.querySelector(':host'); return true; }
-  catch (e) { return false; }
-})();
-
-/**
- * Element prototype, extends from HTMLElement
- *
- * @type {Object}
- */
-var proto = Object.create(HTMLElement.prototype);
-
-/**
  * Supported action types
  *
  * @type {Object}
  */
-var actionTypes = {
-  menu: true,
-  back: true,
-  close: true
-};
+var actionTypes = { menu: 1, back: 1, close: 1 };
+
+/**
+ * Register the component.
+ *
+ * @return {Element} constructor
+ */
+module.exports = Component.register('gaia-header', {
 
 /**
  * Called when the element is first created.
@@ -48,9 +34,7 @@ var actionTypes = {
  *
  * @private
  */
-proto.createdCallback = function() {
-  this.createShadowRoot().innerHTML = template;
-
+created: function() {
   // Get els
   this.els = {
     actionButton: this.shadowRoot.querySelector('.action-button'),
@@ -58,13 +42,11 @@ proto.createdCallback = function() {
     inner: this.shadowRoot.querySelector('.inner')
   };
 
-  this.onActionButtonClick = this.onActionButtonClick.bind(this);
-  this.els.actionButton.addEventListener('click', this.onActionButtonClick);
+  this.els.actionButton.addEventListener('click', e => this.onActionButtonClick(e));
   this.setupInteractionListeners();
   this.configureActionButton();
-  shadowStyleHack(this);
   this.runFontFit();
-};
+},
 
 /**
  * Called when the element is
@@ -72,25 +54,23 @@ proto.createdCallback = function() {
  *
  * @private
  */
-proto.attachedCallback = function() {
-  this.restyleShadowDom();
+attached: function() {
   this.rerunFontFit();
-};
+},
 
 /**
- * Workaround for bug 1056783.
- *
- * Fixes shadow-dom stylesheets not applying
- * when shadow host node is detached on
- * shadow-root creation.
+ * Called when one of the attributes
+ * on the element changes.
  *
  * @private
  */
-proto.restyleShadowDom = function() {
-  var style = this.shadowRoot.querySelector('style');
-  this.shadowRoot.removeChild(style);
-  this.shadowRoot.appendChild(style);
-};
+attributeChanged: function(attr) {
+  debugger;
+  if (attr === 'action') {
+    this.configureActionButton();
+    this.rerunFontFit();
+  }
+},
 
 /**
  * Runs the logic to size and position
@@ -98,12 +78,12 @@ proto.restyleShadowDom = function() {
  *
  * @private
  */
-proto.runFontFit = function() {
+runFontFit: function() {
   for (var i = 0; i < this.els.headings.length; i++) {
     fontFit.reformatHeading(this.els.headings[i]);
     fontFit.observeHeadingChanges(this.els.headings[i]);
   }
-};
+},
 
 /**
  * Rerun font-fit logic.
@@ -112,24 +92,11 @@ proto.runFontFit = function() {
  *
  * @private
  */
-proto.rerunFontFit = function() {
+rerunFontFit: function() {
   for (var i = 0; i < this.els.headings.length; i++) {
     this.els.headings[i].textContent = this.els.headings[i].textContent;
   }
-};
-
-/**
- * Called when one of the attributes
- * on the element changes.
- *
- * @private
- */
-proto.attributeChangedCallback = function(attr, oldVal, newVal) {
-  if (attr === 'action') {
-    this.configureActionButton();
-    this.rerunFontFit();
-  }
-};
+},
 
 /**
  * Triggers the 'action' button
@@ -137,11 +104,11 @@ proto.attributeChangedCallback = function(attr, oldVal, newVal) {
  *
  * @public
  */
-proto.triggerAction = function() {
+triggerAction: function() {
   if (this.isSupportedAction(this.getAttribute('action'))) {
     this.els.actionButton.click();
   }
-};
+},
 
 /**
  * Configure the action button based
@@ -150,7 +117,7 @@ proto.triggerAction = function() {
  *
  * @private
  */
-proto.configureActionButton = function() {
+configureActionButton: function() {
   var old = this.els.actionButton.getAttribute('icon');
   var type = this.getAttribute('action');
   var supported = this.isSupportedAction(type);
@@ -158,16 +125,16 @@ proto.configureActionButton = function() {
   this.els.actionButton.setAttribute('icon', type);
   this.els.inner.classList.toggle('supported-action', supported);
   if (supported) { this.els.actionButton.classList.add('icon-' + type); }
-};
+},
 
 /**
  * Validate action against supported list.
  *
  * @private
  */
-proto.isSupportedAction = function(action) {
+isSupportedAction: function(action) {
   return action && actionTypes[action];
-};
+},
 
 /**
  * Handle clicks on the action button.
@@ -179,11 +146,11 @@ proto.isSupportedAction = function(action) {
  * @param  {Event} e
  * @private
  */
-proto.onActionButtonClick = function(e) {
+onActionButtonClick: function(e) {
   var config = { detail: { type: this.getAttribute('action') } };
   var actionEvent = new CustomEvent('action', config);
   setTimeout(this.dispatchEvent.bind(this, actionEvent));
-};
+},
 
 /**
  * Adds helper classes to allow us to style
@@ -202,11 +169,11 @@ proto.onActionButtonClick = function(e) {
  *
  * @private
  */
-proto.setupInteractionListeners = function() {
+setupInteractionListeners: function() {
   pressed(this.els.inner, { scope: this, instant: true });
-};
+},
 
-var template = `
+template: `
 <style>
 
 :host {
@@ -509,56 +476,8 @@ var template = `
     <content select=".l10n-action"></content>
   </button>
   <content select="h1,h2,h3,h4,a,button"></content>
-</div>`;
-
-/**
- * Extracts the :host and ::content rules
- * from the shadow-dom CSS and rewrites
- * them to work from the <style scoped>
- * injected at the root of the component.
- *
- * @return {String}
- */
-var lightCSS = (function() {
-  if (hasShadowCSS) return '';
-
-  var regex = /(?::host|::content)[^{]*\{[^}]*\}/g;
-  var lightCSS = '';
-
-  template = template.replace(regex, function(match) {
-    lightCSS += match.replace(/::content|:host/g, 'gaia-header');
-    return '';
-  });
-
-  return lightCSS;
-})();
-
-/**
- * The Gecko platform doesn't yet have
- * `::content` or `:host`, selectors,
- * without these we are unable to style
- * user-content in the light-dom from
- * within our shadow-dom style-sheet.
- *
- * To workaround this, we clone the <style>
- * node into the root of the component,
- * so our selectors are able to target
- * light-dom content.
- *
- * @private
- */
-function shadowStyleHack(el) {
-  if (hasShadowCSS) { return; }
-  var style = document.createElement('style');
-  style.setAttribute('scoped', '');
-  style.innerHTML = lightCSS;
-  el.appendChild(style);
-}
-
-// Register and return the constructor
-// and expose `protoype` (bug 1048339)
-module.exports = document.registerElement('gaia-header', { prototype: proto });
-module.exports._prototype = proto;
+</div>`
+});
 
 });})(typeof define=='function'&&define.amd?define
 :(function(n,w){'use strict';return typeof module=='object'?function(c){
