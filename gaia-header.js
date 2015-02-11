@@ -1,16 +1,15 @@
-;(function(define){'use strict';define(function(require,exports,module){
 
 /**
  * Dependencies
  */
 
-var component = require('gaia-component');
-var fontFit = require('font-fit');
+import gaiaComponent from 'gaia-component';
+import fontFit from 'font-fit';
 
 /**
  * Load 'gaia-icons' font-family
  */
-require('gaia-icons');
+import 'gaia-icons';
 
 /**
  * Simple logger (toggle 0)
@@ -69,7 +68,7 @@ const MAXIMUM_FONT_SIZE = 23;
  *
  * @return {Element} constructor
  */
-module.exports = component.register('gaia-header', {
+export default gaiaComponent.register('gaia-header', {
 
   /**
    * Called when the element is first created.
@@ -970,8 +969,3 @@ function nextTick(fn) {
   Promise.resolve().then(() => { if (!cleared) { fn(); } });
   return { clear: function() { cleared = true; }};
 }
-
-});})(typeof define=='function'&&define.amd?define
-:(function(n,w){'use strict';return typeof module=='object'?function(c){
-c(require,exports,module);}:function(c){var m={exports:{}};c(function(n){
-return w[n];},m.exports,m);w[n]=m.exports;};})('gaia-header',this));
