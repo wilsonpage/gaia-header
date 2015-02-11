@@ -2,6 +2,7 @@
   "name": "gaia-header",
   "homepage": "https://github.com/gaia-components/gaia-header",
   "license": "MIT",
+  "version": "0.6.3",
   "main": "gaia-header.js",
   "devDependencies": {
     "bower": "^1.3.5",
@@ -29,5 +30,9 @@
     "gaia-component": "./bower_components/gaia-component/gaia-component.js",
     "gaia-icons": "./bower_components/gaia-icons/gaia-icons.js",
     "font-fit": "./bower_components/font-fit/font-fit.js"
+  },
+  "dependencies": {
+    "font-fit": "git://github.com/gaia-components/font-fit",
+    "gaia-component": "git://github.com/gaia-components/gaia-component"
   }
 }
