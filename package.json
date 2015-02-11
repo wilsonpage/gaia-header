@@ -34,5 +34,11 @@
   "dependencies": {
     "font-fit": "git://github.com/gaia-components/font-fit",
     "gaia-component": "git://github.com/gaia-components/gaia-component"
+  },
+  "jspm": {
+    "dependencies": {
+      "font-fit": "github:gaia-components/font-fit@^0.2.2",
+      "gaia-component": "github:gaia-components/gaia-component@^0.3.4"
+    }
   }
 }
