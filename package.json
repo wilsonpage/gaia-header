@@ -5,6 +5,7 @@
   "version": "0.6.3",
   "registry": "npm",
   "main": "gaia-header.js",
+
   "devDependencies": {
     "bower": "^1.3.5",
     "browserify": "^5.11.2",
@@ -15,26 +16,26 @@
     "karma-sinon-chai": "^0.1.6",
     "mozilla-download": "^0.4.3"
   },
+
   "scripts": {
     "install": "bower install",
     "test": "./node_modules/karma/bin/karma start test/karma.conf.js --single-run",
     "test-dev": "./node_modules/karma/bin/karma start test/karma.conf.js",
     "build": "mkdir -p dist && esperanto --input gaia-header.js --type umd --name GaiaHeader --output ./dist/gaia-header.js && browserify ./dist/gaia-header.js --outfile ./dist/gaia-header.bundle.js --standalone GaiaHeader"
   },
+
   "repository": {
     "type": "git",
     "url": "git://github.com/gaia-components/gaia-header.git"
   },
+
   "bugs": {
     "url": "https://github.com/gaia-components/gaia-header/issues"
   },
-  "browser": {
-    "gaia-component": "./bower_components/gaia-component/gaia-component.js",
-    "gaia-icons": "./bower_components/gaia-icons/gaia-icons.js",
-    "font-fit": "./bower_components/font-fit/font-fit.js"
-  },
+
   "dependencies": {
     "font-fit": "git://github.com/gaia-components/font-fit",
+    "gaia-icons": "git://github.com/gaia-components/gaia-icons",
     "gaia-component": "git://github.com/gaia-components/gaia-component"
   }
 }

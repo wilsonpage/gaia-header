@@ -5,10 +5,6 @@
 
 import gaiaComponent from 'gaia-component';
 import fontFit from 'font-fit';
-
-/**
- * Load 'gaia-icons' font-family
- */
 import 'gaia-icons';
 
 /**
